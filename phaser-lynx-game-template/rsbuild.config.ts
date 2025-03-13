@@ -7,8 +7,15 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [pluginReact()],
+  source: {
+    alias: {
+      '@': path.join(__dirname, 'src'),
+      '@assets': path.join(__dirname, 'public/assets'),
+    },
+  },
   server: {
     port: 1337,
+
     publicDir: [
       {
         name: path.join(

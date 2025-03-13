@@ -13,6 +13,11 @@
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@assets/*": ["./src/assets/*"]
+    },
 
     /* type checking */
     "strict": true,
@@ -23,6 +28,6 @@
 
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*", "*.ts"],
+  "include": ["src/**/*", "*.ts", "public/assets/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

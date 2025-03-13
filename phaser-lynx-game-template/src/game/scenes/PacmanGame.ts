@@ -12,14 +12,10 @@ export class PacmanGame extends Scene {
     super({ key: 'PacmanGame' });
   }
 
-  preload() {
-    // Load assets
-    this.load.image('pacman', 'assets/pacman.png');
-    this.load.image('wall', 'assets/wall.png');
-    this.load.image('dot', 'assets/dot.png');
-  }
-
   create() {
+    // Create animations
+    this.createPacmanAnimations();
+
     // Initialize score
     this.score = 0;
     this.scoreText = this.add.text(16, 16, 'Score: 0', {
@@ -31,27 +27,27 @@ export class PacmanGame extends Scene {
     this.walls = this.physics.add.staticGroup();
 
     // Create basic maze layout (just a border for now)
-    const mazeWidth = this.scale.width - 100;
-    const mazeHeight = this.scale.height - 100;
+    const mazeWidth = this.scale.width - 200;
+    const mazeHeight = this.scale.height - 200;
     const wallThickness = 20;
 
     // Top and bottom walls
     this.walls
-      .create(mazeWidth / 2 + 50, 50, 'wall')
+      .create(mazeWidth / 2 + 100, 100, 'wall')
       .setDisplaySize(mazeWidth, wallThickness)
       .refreshBody();
     this.walls
-      .create(mazeWidth / 2 + 50, mazeHeight + 50, 'wall')
+      .create(mazeWidth / 2 + 100, mazeHeight + 100, 'wall')
       .setDisplaySize(mazeWidth, wallThickness)
       .refreshBody();
 
     // Left and right walls
     this.walls
-      .create(50, mazeHeight / 2 + 50, 'wall')
+      .create(100, mazeHeight / 2 + 100, 'wall')
       .setDisplaySize(wallThickness, mazeHeight)
       .refreshBody();
     this.walls
-      .create(mazeWidth + 50, mazeHeight / 2 + 50, 'wall')
+      .create(mazeWidth + 100, mazeHeight / 2 + 100, 'wall')
       .setDisplaySize(wallThickness, mazeHeight)
       .refreshBody();
 
@@ -60,41 +56,54 @@ export class PacmanGame extends Scene {
 
     // Add dots in a grid pattern
     const spacing = 40;
-    for (let x = 100; x < mazeWidth; x += spacing) {
-      for (let y = 100; y < mazeHeight; y += spacing) {
+    for (let x = 150; x < mazeWidth + 50; x += spacing) {
+      for (let y = 150; y < mazeHeight + 50; y += spacing) {
         this.dots.create(x + 50, y + 50, 'dot').setScale(0.2);
       }
     }
 
     // Create Pacman
-    this.pacman = this.physics.add.sprite(100, 100, 'pacman');
+    this.pacman = this.physics.add.sprite(150, 150, 'pacman-right-1');
     this.pacman.setCollideWorldBounds(true);
     this.pacman.setScale(0.5);
+    this.pacman.play('pacman-right');
 
     // Setup collisions
     this.physics.add.collider(this.pacman, this.walls);
     this.physics.add.overlap(
       this.pacman,
       this.dots,
-      this.collectDot,
+      (_: any, dot: any) => {
+        (dot as Phaser.Physics.Arcade.Sprite).destroy();
+        this.score += 10;
+        this.scoreText.setText('Score: ' + this.score);
+      },
       undefined,
       this,
     );
 
     // Setup input
+    if (!this.input || !this.input.keyboard) {
+      throw new Error('Keyboard input not available');
+    }
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
-  private collectDot(
-    _: Phaser.Types.Physics.Arcade.GameObjectWithBody,
-    dot: Phaser.Types.Physics.Arcade.GameObjectWithBody,
-  ) {
-    const dotSprite = dot as Phaser.Physics.Arcade.Sprite;
-    if (dotSprite) {
-      dotSprite.destroy();
-      this.score += 10;
-      this.scoreText.setText('Score: ' + this.score);
-    }
+  private createPacmanAnimations() {
+    // Create animations for each direction
+    ['right', 'left', 'up', 'down'].forEach((direction) => {
+      this.anims.create({
+        key: `pacman-${direction}`,
+        frames: [
+          { key: `pacman-${direction}-1` },
+          { key: `pacman-${direction}-2` },
+          { key: `pacman-${direction}-3` },
+          { key: `pacman-${direction}-2` },
+        ],
+        frameRate: 10,
+        repeat: -1,
+      });
+    });
   }
 
   update() {
@@ -106,18 +115,36 @@ export class PacmanGame extends Scene {
     // Handle movement
     if (this.cursors.left.isDown) {
       this.pacman.setVelocityX(-speed);
-      this.pacman.angle = 180;
+      if (this.pacman.anims.getName() !== 'pacman-left') {
+        this.pacman.play('pacman-left');
+      }
     } else if (this.cursors.right.isDown) {
       this.pacman.setVelocityX(speed);
-      this.pacman.angle = 0;
+      if (this.pacman.anims.getName() !== 'pacman-right') {
+        this.pacman.play('pacman-right');
+      }
     }
 
     if (this.cursors.up.isDown) {
       this.pacman.setVelocityY(-speed);
-      this.pacman.angle = -90;
+      if (this.pacman.anims.getName() !== 'pacman-up') {
+        this.pacman.play('pacman-up');
+      }
     } else if (this.cursors.down.isDown) {
       this.pacman.setVelocityY(speed);
-      this.pacman.angle = 90;
+      if (this.pacman.anims.getName() !== 'pacman-down') {
+        this.pacman.play('pacman-down');
+      }
+    }
+
+    // Stop animation if not moving
+    if (
+      this.pacman.body?.velocity.x === 0 &&
+      this.pacman.body?.velocity.y === 0
+    ) {
+      this.pacman.anims.pause();
+    } else {
+      this.pacman.anims.resume();
     }
   }
 }

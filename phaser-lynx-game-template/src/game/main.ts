@@ -1,19 +1,30 @@
-import { AUTO, Game } from 'phaser';
-import { Boot } from './scenes/Boot';
-import { Game as MainGame } from './scenes/Game';
-import { GameOver } from './scenes/GameOver';
-import { MainMenu } from './scenes/MainMenu';
-import { PacmanGame } from './scenes/PacmanGame';
-import { Preloader } from './scenes/Preloader';
+import { AUTO, Game, Scale } from 'phaser';
+import { BootScene } from './scenes/BootScene';
+import { GameScene } from './scenes/GameScene';
+import { LoadingScene } from './scenes/LoadingScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
-const config: Phaser.Types.Core.GameConfig = {
+const gameConfig: Phaser.Types.Core.GameConfig = {
   type: AUTO,
-  width: 1024,
-  height: 768,
+
   parent: 'game-container',
   backgroundColor: '#000000',
+  scale: {
+    mode: Scale.ScaleModes.RESIZE,
+    autoCenter: Scale.CENTER_BOTH,
+    width: 1920,
+    height: 1080,
+  },
+  fps: {
+    target: 60,
+    min: 30,
+  },
+  audio: {
+    disableWebAudio: false,
+    noAudio: false,
+    disableContextMenu: true,
+  },
   physics: {
     default: 'arcade',
     arcade: {
@@ -21,17 +32,11 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1024,
-    height: 768,
-  },
-  scene: [Boot, Preloader, MainMenu, MainGame, GameOver, PacmanGame],
+  scene: [BootScene, LoadingScene, GameScene],
 };
 
-const StartGame = (parent: string) => {
-  return new Game({ ...config, parent });
+const createGame = (containerId: string) => {
+  return new Game({ ...gameConfig, parent: containerId });
 };
 
-export default StartGame;
+export default createGame;

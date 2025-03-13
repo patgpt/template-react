@@ -1,16 +1,18 @@
 import '@lynx-js/web-core';
-import '@lynx-js/web-core/index.css';
-import '@lynx-js/web-elements/index.css';
+import { useRef } from 'react';
 import './App.css';
-import PhaserGameApp from './PhaserGameApp';
+import { Game, GameRef } from './game/PhaserGame';
 
 const App = () => {
+  const gameRef = useRef<GameRef | null>(null);
+
   return (
     <lynx-view
-      style={{ height: '100vh', width: '100vw' }}
-      url="/main.web.bundle"
+      style={{ width: '100%', height: '100%', backgroundColor: '#000' }}
     >
-      <PhaserGameApp />
+      <div id="app">
+        <Game ref={gameRef} />
+      </div>
     </lynx-view>
   );
 };

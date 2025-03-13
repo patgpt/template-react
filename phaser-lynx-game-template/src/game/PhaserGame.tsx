@@ -1,60 +1,40 @@
-import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
-import { EventBus } from './EventBus';
-import StartGame from './main';
+import { forwardRef, useEffect, useRef } from 'react';
+import createGame from './main';
 
-export interface IRefPhaserGame {
+export interface GameRef {
   game: Phaser.Game | null;
-  scene: Phaser.Scene | null;
 }
 
-interface IProps {
-  currentActiveScene?: (scene_instance: Phaser.Scene) => void;
+interface GameProps {
+  onSceneReady?: (scene: Phaser.Scene) => void;
 }
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(
-  function PhaserGame({ currentActiveScene }, ref) {
-    const game = useRef<Phaser.Game | null>(null!);
+export const Game = forwardRef<GameRef, GameProps>(function Game(
+  { onSceneReady },
+  ref,
+) {
+  const gameRef = useRef<Phaser.Game | null>(null);
 
-    useLayoutEffect(() => {
-      if (game.current === null) {
-        game.current = StartGame('game-container');
+  useEffect(() => {
+    if (!gameRef.current) {
+      gameRef.current = createGame('game-container');
 
+      if (ref) {
         if (typeof ref === 'function') {
-          ref({ game: game.current, scene: null });
-        } else if (ref) {
-          ref.current = { game: game.current, scene: null };
+          ref({ game: gameRef.current });
+        } else {
+          ref.current = { game: gameRef.current };
         }
       }
+    }
 
-      return () => {
-        if (game.current) {
-          game.current.destroy(true);
-          if (game.current !== null) {
-            game.current = null;
-          }
-        }
-      };
-    }, [ref]);
+    return () => {
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
+      }
+    };
+  }, [ref]);
 
-    useEffect(() => {
-      EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) => {
-        if (currentActiveScene && typeof currentActiveScene === 'function') {
-          currentActiveScene(scene_instance);
-        }
-
-        if (typeof ref === 'function') {
-          ref({ game: game.current, scene: scene_instance });
-        } else if (ref) {
-          ref.current = { game: game.current, scene: scene_instance };
-        }
-      });
-      return () => {
-        EventBus.removeListener('current-scene-ready');
-      };
-    }, [currentActiveScene, ref]);
-
-    return (
-      <div id="game-container" style={{ width: '100%', height: '100%' }}></div>
-    );
-  },
-);
+  return <div id="game-container" />;
+});
